@@ -1,0 +1,26 @@
+#!/bin/bash
+
+#by xG33Kx
+#
+#NOTE:
+#You will want to modify the paths to wherever you put this script, you'd probably want it somewhere in your PATH
+#
+
+if [[ ! $1 ]]
+then echo "Usage: $0 "
+exit 1
+else
+mac=$(sed -ne '{
+        # strip all punctuation
+        s/[\.:\-]//g
+
+        # convert to uppercase
+        s/[a-f]/\u&/g
+
+        # rewrite to canonical format
+        s/^\([0-9A-F]\{2\}\)\([0-9A-F]\{2\}\)\([0-9A-F]\{2\}\).*/\1-\2-\3/p
+} ' <<< $1)
+#echo ${mac:0:8}
+oui=${mac:0:8}
+grep -i $oui /path/to/script/dir/oui.txt
+fi
