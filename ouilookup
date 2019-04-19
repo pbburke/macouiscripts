@@ -6,11 +6,41 @@
 #You will want to modify the paths to wherever you put this script, you'd probably want it somewhere in your PATH
 #
 
-if [[ ! $1 ]]
-then echo "Usage: $0 "
-exit 1
-else
-mac=$(sed -ne '{
+set -euo pipefail
+IFS=$'\n\t'
+
+DIRECTORY=`dirname $0`
+ARG=${1:-}
+if [[ ! $ARG ]]
+then 
+    echo "Usage: \"ouilookukp mac address\" or \"ouilookup --update\""
+    exit 1
+
+elif [[ $ARG == "--update" ]]
+then
+    if [[ ! -f "$DIRECTORY/oui.txt" ]]
+    then
+        echo "downloading file from IEEE"
+        wget -O "$DIRECTORY/oui.txt" http://standards-oui.ieee.org/oui.txt
+    else
+        echo "Downloading file from IEEE"
+        wget -O "$DIRECTORY/oui2.txt" http://standards-oui.ieee.org/oui.txt
+
+        #md5sum returns the md5sum and the filename, I just want the md5
+        oldfile=`md5sum "$DIRECTORY/oui.txt" | cut -d ' ' -f 1`
+        newfile=`md5sum "$DIRECTORY/oui2.txt" | cut -d ' ' -f 1`
+
+        if [[ "$oldfile" != "$newfile" ]]
+        then
+    	    echo "New file has different MD5 sum, overwriting"
+    	    mv "$DIRECTORY/oui2.txt" "$DIRECTORY/oui.txt"
+        else
+    	    echo "No changes, removing new file and exiting"
+    	    rm "$DIRECTORY/oui2.txt"
+        fi
+    fi
+else #todo: handle things that aren't a mac or --update being input
+    MAC=$(sed -ne '{
         # strip all punctuation
         s/[\.:\-]//g
 
@@ -19,8 +49,14 @@ mac=$(sed -ne '{
 
         # rewrite to canonical format
         s/^\([0-9A-F]\{2\}\)\([0-9A-F]\{2\}\)\([0-9A-F]\{2\}\).*/\1-\2-\3/p
-} ' <<< $1)
-#echo ${mac:0:8}
-oui=${mac:0:8}
-grep -i $oui /path/to/script/dir/oui.txt
+    } ' <<< $ARG)
+    OUI=${MAC:0:8}
+    
+    if grep -qi $OUI "$DIRECTORY/oui.txt"
+    then
+        #there's probably a more elegant way to do this
+        grep -i $OUI "$DIRECTORY/oui.txt"
+    else
+        echo "OUI not found for given MAC address $MAC !"
+    fi
 fi
