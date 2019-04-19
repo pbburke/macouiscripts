@@ -2,9 +2,6 @@
 
 #by xG33Kx
 #
-#NOTE:
-#You will want to modify the paths to wherever you put this script, you'd probably want it somewhere in your PATH
-#
 
 set -euo pipefail
 IFS=$'\n\t'
